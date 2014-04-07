@@ -63,6 +63,21 @@
 				</section>
 
 				<section>
+					<h2>UUID as Primary key</h2>
+					<pre class="fragment"><code data-trim contenteditable>
+						CREATE EXTENSION "uuid-ossp";
+SELECT uuid_generate_v4();
+#=> cf4fadf7-22e0-4f46-bdda-232b7883a1c9
+					</code></pre>
+					<pre class="fragment"><code data-trim>
+create_table('my_table_name', id: :uuid) do |t|
+  t.string 'title'
+end
+					</code></pre>
+					<pre class="fragment"><code data-trim>
+User.create.attributes
+# => {"id"=>"468cdfa4-1c11-4e34-a996-ecc561c0e866", (...) }
+					</code></pre>
 				</section>
 
 				<section>
