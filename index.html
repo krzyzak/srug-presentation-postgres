@@ -106,6 +106,115 @@ User.create.attributes
 				</section>
 
 				<section>
+				<section>
+					<h2>PostGIS</h2>
+					<h3>Spatial and Geographic Objects for PostgreSQL</h3>
+				</section>
+
+				<section>
+					<h2>PostGIS – gentle introduction</h2>
+					<img src="cartesian_spherical.jpg">
+				</section>
+
+				<section>
+					<h2>PostGIS – gentle introduction</h2>
+					<img src="lax_cdg.jpg">
+				</section>
+
+				<section>
+					<h2>PostGIS – gentle introduction</h2>
+					<pre><code data-trim>
+SELECT ST_Distance(
+  ST_GeometryFromText('Point(-118.4079 33.9434)'),  -- Los Angeles
+  ST_GeometryFromText('Point(2.5711 49.0039)'))     -- Paris
+    AS geometry_distance,
+ST_Distance(
+  ST_GeographyFromText('Point(-118.4079 33.9434)'), -- Los Angeles
+  ST_GeographyFromText('Point(2.5711 49.0039)'))    -- Paris
+    AS geography_distance;
+
+ geometry_distance | geography_distance
+-------------------+--------------------
+  121.912825827515 |   9125804.29716346
+ 				</code></pre>
+ 				</section>
+
+				<section>
+				<h2>Postgis – select POI within 2km</h2>
+				<div class="fragment">
+					Create column
+					<pre><code data-trim>
+	ALTER TABLE pois ADD COLUMN location geography(Point,4326);
+					</code></pre>
+				</div>
+				<div class="fragment">
+					Add POI
+					<pre><code data-trim>
+INSERT INTO pois(name, location)
+ VALUES(
+  "Sample",
+  ST_MakePoint(52.228, 21.011), 4326)
+ );
+					</code></pre>
+				</div>
+				<div class="fragment">
+					Select POIs within 2km of desired location
+					<pre><code data-trim>
+	SELECT * FROM pois WHERE
+	 ST_DWithin(
+	  location,
+	  ST_MakePoint(52.218, 21.019), # desired point (Warsaw)
+	  2000 # Meters
+	 )
+					</code></pre>
+				</div>
+				</section>
+
+				<section>
+					<h2>Postgis – shapes example</h2>
+					<img src="postgis_shape.png" class="fragment"/>
+				</section>
+
+				<section>
+					<h2>Postgis – shapes example</h2>
+					<div class="fragment">
+						<pre><code data-trim>
+ALTER TABLE districts ADD COLUMN shape geography(MultiPolygon,4326);
+						</code></pre>
+					</div>
+					<div class="fragment">
+						<pre><code data-trim>
+INSERT INTO districts(name, shape)
+ VALUES(
+  "Silesian",
+  ST_PolygonFromText('POLYGON((-71.1776585052917 42.3902909739571,-71.1776820268866 42.3903701743239,
+-71.1776063012595 42.3903825660754,-71.1775826583081 42.3903033653531,-71.1776585052917 42.3902909739571))')
+ );
+ 					</code></pre>
+ 				</div>
+ 				<div class="fragment">
+						<pre><code data-trim>
+SELECT name FROM districts WHERE
+ ST_CONTAINS(
+   shape,
+   ST_MakePoint(52.218, 21.019)
+ )
+ 					</code></pre>
+ 				</div>
+				</section>
+
+				<section>
+					<h2>But there’s more!</h2>
+					<ul>
+						<li class="fragment">ST_Area – Returns the area of the surface if it is a polygon or multi-polygon.</li>
+						<li class="fragment">ST_Centroid — Returns the geometric center of a geometry.</li>
+						<li class="fragment">ST_Touches — Returns TRUE if the geometries have at least one point in common, but their interiors do not intersect.</li>
+						<li class="fragment">ST_ShortestLine — Returns the 2-dimensional shortest line between two geometries</li>
+						<li class="fragment">And many, many more…</li>
+					</ul>
+				</section>
+
+				<section>
 					<h2>Fun fact</h2>
 					<p>
 						<pre class="fragment"><code data-trim contenteditable>
