@@ -121,7 +121,12 @@ ALTER TABLE users ADD COLUMN json_settings json;
 					</code></pre>
 					<pre><code data-trim>
 UPDATE "users" SET json_settings =
- '{"foo": "bar", "we": {"can": {"nest": "things"} }}';
+ '{
+   "foo": 9,
+   "roles": ["moderator", "super-moderator"],
+   "we": {"can": {"nest": "things"} }
+  }
+ ';
 					</code></pre>
 					<pre><code data-trim>
 SELECT * FROM "users" WHERE
@@ -130,7 +135,23 @@ SELECT * FROM "users" WHERE
 				</section>
 
 				<section>
-					<h2>
+					<h2>JSON objects</h2>
+					<pre><code data-trim>
+UPDATE "users" SET json_settings =
+ '{
+   "foo": 9,
+   "roles": ["moderator", "super-moderator"],
+   "we": {"can": {"nest": "things"} }
+  }
+ ';
+					</code></pre>
+					<pre><code data-trim>
+SELECT * FROM "users" WHERE
+ '"moderator"' IN(
+  SELECT value::text FROM json_array_elements(json_settings->'roles')
+ );
+					</code></pre>
+				</section>
 
 				<section>
 					<h2>UUID as Primary key</h2>
