@@ -79,6 +79,60 @@
 				</section>
 
 				<section>
+					<h2>HStore</h2>
+					<img src="hstore.png" />
+				</section>
+
+				<section>
+					<h2>HStore</h2>
+					<pre><code data-trim>
+CREATE EXTENSION "hstore";
+					</code></pre>
+					<pre><code data-trim>
+ALTER TABLE users ADD COLUMN settings hstore;
+					</code></pre>
+
+					<pre><code data-trim>
+ INSERT INTO "users" values(1, 'admin=>"true",foo=>"bar"');
+					</code></pre>
+
+					<pre><code data-trim>
+ SELECT * FROM "users" WHERE settings->'admin' = 'true';
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>HStore – limitations</h2>
+					<ul>
+						<li class="fragment">Can’t nest objects</li>
+						<li class="fragment">Stores everything as text</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>JSON</h2>
+				</section>
+
+				<section>
+					<h2>JSON</h2>
+					We can nest things!
+					<pre><code data-trim>
+ALTER TABLE users ADD COLUMN json_settings json;
+					</code></pre>
+					<pre><code data-trim>
+UPDATE "users" SET json_settings =
+ '{"foo": "bar", "we": {"can": {"nest": "things"} }}';
+					</code></pre>
+					<pre><code data-trim>
+SELECT * FROM "users" WHERE
+ json_extract_path(json_settings, 'we', 'can', 'nest') = 'things';
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>
+
+				<section>
 					<h2>UUID as Primary key</h2>
 					<pre class="fragment"><code data-trim contenteditable>
 						CREATE EXTENSION "uuid-ossp";
@@ -96,16 +150,6 @@ User.create.attributes
 					</code></pre>
 				</section>
 
-				<section>
-					<h2>Hstore</h2>
-					<img src="hstore.png" />
-				</section>
-
-				<section>
-					<h2>JSON</h2>
-				</section>
-
-				<section>
 				<section>
 					<h2>PostGIS</h2>
 					<h3>Spatial and Geographic Objects for PostgreSQL</h3>
