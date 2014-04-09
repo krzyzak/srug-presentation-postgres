@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>reveal.js - The HTML Presentation Framework</title>
+
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <script>
+      document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h1>Deep into Postgres</h1>
+          <p>
+            <small>SRUG, Gliwice, 11.04.2014</small>
+          </p>
+        </section>
+
+        <section>
+        <div style="width: 49%; float: left">
+          <h2>Michał Krzyżanowski</h2>
+          <p>
+            @krzyzak
+          </p>
+          <h2>Łukasz Strzebińczyk</h2>
+          <p>
+            @KillaPL
+          </p>
+        </div>
+          <div style="width: 49%; float: right">
+            <img src="grg.png" />
+          </div>
+        </section>
+
+        <section>
+          <h1>Full text search</h1>
+        </section>
+
+        <section>
+          <img src="magnifying_glass.png"/>
+        </section>
+
+        <section>
+          <ul>
+            <li class="fragment">
+              <h3>Solr</h3>
+            </li>
+            <li class="fragment">
+              <h3>Elastic Search</h3>
+            </li>
+            <li class="fragment">
+              <h3>PostgreSQL</h3>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Postgresql 8.3</h2>
+          <div>tsvector</div>
+          <div>tsquery</div>
+        </section>
+
+        <section>
+          <h2>tsvector</h2>
+          <pre><code data-trim>
+select to_tsvector('Lorem ipsum dolor sit amet');
+=> 'amet':5 'dolor':3 'ipsum':2 'lorem':1 'sit':4
+</code></pre>
+          <h2>tsquery</h2>
+          <pre><code data-trim>
+select to_tsquery('Lorem') || to_tsquery('ipsum');
+=> 'lorem' | 'ipsum'
+</code></pre>
+        </section>
+
+
+
+        <section>
+          <h2>But does it have features?</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim >
+create_table "posts", force: true do |t|
+  t.text "content"
+end
+            </code></pre>
+            <div class="fragment">Basic search:
+            <pre><code data-trim >
+SELECT * FROM posts WHERE to_tsvector(content) @@
+  to_tsquery('simple') && to_tsquery('query');</code></pre></div>
+            <div class="fragment">Any word:
+            <pre><code data-trim >
+SELECT * FROM posts WHERE to_tsvector(content) @@
+  to_tsquery('simple') || to_tsquery('query');</code></pre></div>
+           <div class="fragment"> Prefix:
+            <pre><code data-trim >
+SELECT * FROM posts WHERE to_tsvector(content) @@
+  to_tsquery('simple' || ':*') && to_tsquery('query' || ':*');</code></pre></div>
+        </section>
+
+        <section>
+          <h2>Trigram</h2>
+          <pre class="fragment"><code data-trim>CREATE EXTENSION "pg_trgm";</code></pre>
+          <pre class="fragment"><code data-trim>
+select show_trgm('Lorem Ipsum');
+=> {"  i","  l"," ip"," lo","em ",ips,lor,ore,psu,rem,sum,"um "}</code></pre>
+<pre class="fragment"><code data-trim>
+select similarity('java', 'javascript');
+=> 0.333333
+</code></pre>
+<pre class="fragment"><code data-trim>
+select similarity('ruby', 'php');
+=> 0
+</code></pre>
+<pre class="fragment"><code data-trim>
+SELECT * FROM posts WHERE content % 'simple query';
+</code></pre>
+
+        </section>
+        <section>
+          <h2>Weighting</h2>
+        </section>
+
+
+        <section>
+          <ul>
+            <li>Scoping</li>
+            <li>Disjunctions</li>
+            <li>Conjunctions</li>
+            <li>Restrictions</li>
+            <li>Pagination</li>
+            <li>Ordering</li>
+            <li>Grouping</li>
+            <li>Joins</li>
+          </ul>
+        </section>
+
+        <section>
+          <ul>
+            <li>WHERE</li>
+            <li>LIMIT</li>
+            <li>OFFSET</li>
+            <li>ORDER</li>
+            <li>GROUP BY</li>
+            <li>JOIN</li>
+          </ul>
+          <div>
+            <img src="are_you_kidding.png" style="border: 0; width: 30%"/>
+          </div>
+        </section>
+
+        <section>
+          <h3>Faceted search</h3>
+          <img src="faceted_search.png">
+        </section>
+        <section>
+          <ul>
+            <li>http://tech.pro/tutorial/1142/building-faceted-search-with-postgresql</li>
+            <li class="fragment">http://www.garysieling.com/blog/gin-vs-gist-for-faceted-search-with-postgres-full-text-indexes</li>
+            <li class="fragment">http://coffeecode.net/archives/270-A-Flask-of-full-text-search-in-PostgreSQL.html</li>
+          </ul>
+        </section>
+
+        <section>
+          <img src="fuck.jpg"/>
+        </section>
+
+        <section>
+          <img src="thinking-meme.png">
+        </section>
+
+        <section>
+          <h1>But does it scale?</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim>gem 'pg_search'</code></pre>
+          <pre><code data-trim>gem 'sunspot_rails'</code></pre>
+          <pre><code data-trim>gem 'sunspot_solr'</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim>
+create_table "posts", force: true do |t|
+  t.string   "title"
+  t.text     "content"
+end
+</code></pre>
+        </section>
+
+        <section>
+          pg_search:
+          <pre><code data-trim>
+class Post &lt; ActiveRecord::Base
+  include PgSearch
+  pg_search_scope :search_with_postgres,
+    against: [:title, :content], using: :tsearch
+end
+</code></pre>
+sunspot:
+<pre><code data-trim>
+class Post &lt; ActiveRecord::Base
+  searchable do
+    text :title, :content
+  end
+end
+</code></pre>
+        </section>
+
+        <section>
+<pre><code data-trim>
+Post.create do |post|
+  post.title   = Faker::Lorem.sentence
+  post.content = Faker::Lorem.sentence(30)
+end
+</code></pre>
+pg_search:
+<pre><code data-trim>
+Post.search_with_postgres(Faker::Lorem.sentence(3)).limit(30).to_a
+</code></pre>
+sunspot:
+<pre><code data-trim>
+Post.search do
+  fulltext Faker::Lorem.sentence(3)
+end.results
+</code></pre>
+        </section>
+
+        <section>
+<pre><code data-trim>
+Post.create do |post|
+  post.title   = Faker::Lorem.sentence
+  post.content = Faker::Lorem.sentence(5)
+end
+</code></pre>
+pg_search:
+<pre><code data-trim>
+Post.search_with_postgres(Faker::Lorem.sentence(1)).limit(30).to_a
+</code></pre>
+sunspot:
+<pre><code data-trim>
+Post.search do
+  fulltext Faker::Lorem.sentence(1)
+end.results
+</code></pre>
+        </section>
+
+        <section>
+        Large:
+          <table class="table_1">
+<thead>
+<td>Posts count</td>
+    <td>Postgres time</td>
+    <td>Solr time</td>
+    <td>Postgres indexing</td>
+    <td>Solr Indexing</td>
+  </thead>
+<tbody>
+<tr>
+<td>100</td>
+      <td>7.64</td>
+      <td>5.26</td>
+      <td>1.84</td>
+      <td>10.42</td>
+    </tr>
+<tr>
+<td>1000</td>
+      <td>18.50</td>
+      <td>5.99</td>
+      <td>0.39</td>
+      <td>0.95</td>
+    </tr>
+<tr>
+<td>10000</td>
+      <td>8.98</td>
+      <td>10.14</td>
+      <td>0.11</td>
+      <td>0.64</td>
+    </tr>
+<tr>
+<td>100000</td>
+      <td>33.97</td>
+      <td>14.72</td>
+      <td>0.087</td>
+      <td>0.35</td>
+    </tr>
+</tbody>
+</table>
+Small:
+<table class="table_1">
+  <thead>
+    <td>Posts count</td>
+    <td>Postgres time</td>
+    <td>Solr time</td>
+    <td>Postgres indexing</td>
+    <td>Solr Indexing</td>
+  </thead>
+  <tbody>
+    <tr>
+      <td>100</td>
+      <td>6.32</td>
+      <td>5.01</td>
+      <td>0.27</td>
+      <td>2.83</td>
+    </tr>
+    <tr>
+      <td>1000</td>
+      <td>11.17</td>
+      <td>5.98</td>
+      <td>0.064</td>
+      <td>0.48</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>8.25</td>
+      <td>7.26</td>
+      <td>0.028</td>
+      <td>0.32</td>
+    </tr>
+    <tr>
+      <td>100000</td>
+      <td>36.86</td>
+      <td>9.20</td>
+      <td>0.027</td>
+      <td>0.32</td>
+    </tr>
+  </tbody>
+</table>
+        </section>
+
+        <section>
+          <img src="wat.png">
+        </section>
+
+        <section>
+
+<pre><code data-trim>
+Post.create do |post|
+  post.title   = ""
+  post.content = Faker::Name.name
+end
+</code></pre>
+pg_search:
+<pre><code data-trim>
+Post.search_with_postgres(Faker::Name.first_name).limit(30).to_a
+</code></pre>
+sunspot:
+<pre><code data-trim>
+Post.search do
+  fulltext Faker::Name.first_name
+end.results
+</code></pre>
+        </section>
+
+        <section>
+<table>
+<thead>
+<td>Posts count</td>
+    <td>Postgres time</td>
+    <td>Solr time</td>
+    <td>Postgres indexing</td>
+    <td>Solr Indexing</td>
+  </thead>
+<tbody>
+<tr>
+<td>100</td>
+      <td>3.09</td>
+      <td>4.23</td>
+      <td>0.20</td>
+      <td>2.66</td>
+    </tr>
+<tr>
+<td>1000</td>
+      <td>2.60</td>
+      <td>4.83</td>
+      <td>0.08</td>
+      <td>0.60</td>
+    </tr>
+<tr>
+<td>10000</td>
+      <td>1.83</td>
+      <td>6.33</td>
+      <td>0.02</td>
+      <td>0.34</td>
+    </tr>
+<tr>
+<td>100000</td>
+      <td>4.33</td>
+      <td>9.08</td>
+      <td>0.0066</td>
+      <td>0.31</td>
+    </tr>
+</tbody>
+</table>
+<div class="fragment">
+  <img src="oh_yes.GIF">
+</div>
+        </section>
+
+        <section>
+<pre><code data-trim>
+pg_search_scope :search,
+  against: [:id, :system_id, :description, :first_reference, :second_reference],
+  associated_against: {
+    print_supplier: [:name],
+    end_customer: [:name],
+    client: [:name, :short_name]
+  }
+  using: {
+    tsearch: { prefix: true }
+  }
+</code></pre>
+        <div class="fragment">
+          <img src="search_performance.png",>
+        </div>
+        </section>
+
+
+
+
+
+
+
+        <section>
+          <h1>#to_json</h1>
+        </section>
+
+        <section>
+          <ul>
+            <li class="fragment">
+              <h3>JBuilder</h3>
+            </li>
+            <li class="fragment">
+              <h3>Rabl</h3>
+            </li>
+            <li class="fragment">
+              ActiveModel::Serializers
+            </li>
+            <li class="fragment">
+              <h3>PostgreSQL</h3>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Postgresql 9.2</h2>
+          <div>array_to_json(anyarray [, pretty_bool])</div>
+          <div>row_to_json(record [, pretty_bool])</div>
+        </section>
+
+        <section>
+          <h2>Postgresql 9.3</h2>
+          <div>to_json(anyelement)</div>
+          <div>json_agg(record)</div>
+          <div>json_array_length(json)</div>
+          <div>json_each(json)</div>
+          <div>json_each_text(from_json json)</div>
+          <div>json_extract_path(from_json json, VARIADIC path_elems text[])</div>
+          <div>json_extract_path_text(from_json json, VARIADIC path_elems text[])</div>
+          <div>json_object_keys(json)</div>
+          <div>json_populate_record(base anyelement, from_json json, [, use_json_as_text bool=false])</div>
+          <div>json_populate_recordset(base anyelement, from_json json, [, use_json_as_text bool=false])</div>
+          <div>json_array_elements(json)</div>
+        </section>
+
+        <section>
+<pre><code data-trim>
+SELECT Array_to_json(COALESCE(Array_agg(Row_to_json(t)), '{}'))
+FROM   (SELECT id,
+               title,
+               content,
+               (SELECT Row_to_json(t)
+                FROM   (SELECT id
+                        FROM   "authors"
+                        WHERE  ( "id" = "author_id" )) t) author
+        FROM   "posts") t
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim>gem "surus"</code></pre>
+          <div class="fragment">
+            vs
+            <pre><code data-trim>gem "active_model_serializers"</code></pre>
+          </div>
+        </section>
+
+        <section>
+
+ActiveModel::Serializer
+<pre><code data-trim>
+class AuthorSerializer < ActiveModel::Serializer
+  attributes :id, :name
+end
+
+class PostSerializer < ActiveModel::Serializer
+  attributes :id, :title, :content
+  has_one :author
+end
+
+ActiveModel::ArraySerializer.new(
+  Post.all,
+  each_serializer: PostSerializer
+  ).to_json
+</code></pre>
+Surus
+<pre><code data-trim>
+Post.all_json(
+  columns: [:id, :title, :content],
+  include: {
+    author: {
+      columns: [:id, :name]
+    }
+  }
+  )
+</code></pre>
+        </section>
+
+        <section>
+          <table>
+            <thead>
+              <td>Posts count</td>
+              <td>AM::Serializers</td>
+              <td>Surus</td>
+            </thead>
+            <tbody>
+            <tr>
+              <td>100</td>
+              <td>9.46</td>
+              <td>2.88</td>
+            </tr>
+            <tr>
+              <td>400</td>
+              <td>36.80</td>
+              <td>6.39</td>
+            </tr>
+            <tr>
+          </table>
+        </section>
+
+        <section>
+<pre><code data-trim>
+def render_json(jobs)
+  json = jobs.all_json(
+    columns: [
+      :id, :system_id,
+      :stage, :label,
+      :description, :first_reference,
+      :second_reference, :cached_plate_names,
+      :priority, :notifications_bitmap,
+      :updated_at, :hidden
+      ],
+    include: {
+      end_customer: { columns: [:name] },
+      client: { columns: [:id, :short_name] },
+      print_supplier: { columns: [:short_name] }
+      })
+  render json: json
+end
+</code></pre>
+
+        </section>
+
+        <section>
+          <h1>THE END</h1>
+          <h3>BY Hakim El Hattab / hakim.se</h3>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+        // parallaxBackgroundSize: '2100px 900px',
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
