@@ -4,10 +4,7 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>reveal.js - The HTML Presentation Framework</title>
-
-		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
-		<meta name="author" content="Hakim El Hattab">
+		<title>Deep into Postgres</title>
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -44,7 +41,6 @@
 				</section>
 
 				<section>
-				<div style="width: 49%; float: left">
 					<h2>Michał Krzyżanowski</h2>
 					<p>
 						@krzyzak
@@ -53,10 +49,6 @@
 					<p>
 						@KillaPL
 					</p>
-				</div>
-					<div style="width: 49%; float: right">
-						<img src="grg.png" />
-					</div>
 				</section>
 
 				<section>
@@ -85,18 +77,18 @@
 
 				<section>
 					<h2>HStore</h2>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 CREATE EXTENSION "hstore";
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 ALTER TABLE users ADD COLUMN settings hstore;
 					</code></pre>
 
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
  INSERT INTO "users" values(1, 'admin=>"true",foo=>"bar"');
 					</code></pre>
 
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
  SELECT * FROM "users" WHERE settings->'admin' = 'true';
 					</code></pre>
 				</section>
@@ -116,10 +108,10 @@ ALTER TABLE users ADD COLUMN settings hstore;
 				<section>
 					<h2>JSON</h2>
 					We can nest things!
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 ALTER TABLE users ADD COLUMN json_settings json;
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
    "foo": 9,
@@ -128,7 +120,7 @@ UPDATE "users" SET json_settings =
   }
  ';
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 SELECT * FROM "users" WHERE
  json_extract_path(json_settings, 'we', 'can', 'nest') = 'things';
 					</code></pre>
@@ -136,7 +128,7 @@ SELECT * FROM "users" WHERE
 
 				<section>
 					<h2>JSON objects</h2>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
    "foo": 9,
@@ -145,7 +137,7 @@ UPDATE "users" SET json_settings =
   }
  ';
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 SELECT * FROM "users" WHERE
  '"moderator"' IN(
   SELECT value::text FROM json_array_elements(json_settings->'roles')
@@ -280,30 +272,101 @@ SELECT name FROM districts WHERE
 				</section>
 
 				<section>
-					<h2>Fun fact</h2>
-					<p>
-						<pre class="fragment"><code data-trim contenteditable>
-SELECT * FROM my_table WHERE 1 = 0;
-Total runtime: 0.227 ms
-						</code></pre>
-					</p>
-					<p>
-						<pre class="fragment"><code data-trim contenteditable>
-1_000_000.times{|i| MyMongoDocument.new(title: "Document #{i}")
-						</code></pre>
-					</p>
-					<p>
-						<pre class="fragment"><code data-trim>
-Benchmark.measure{ Document.where(1 => 0) }
-=> #&lt;Benchmark::Tms:0x00000101d5a208 @label="", @real=1.603334,
-@cstime=0.0, @cutime=0.0, @stime=0.0, @utime=0.009999999999990905,
- @total=0.009999999999990905&gt;
-						</code></pre>
+					<h2>Stored procedures...</h2>
+					<pre class="fragment"><code data-trim>
+CREATE OR REPLACE FUNCTION update_reason_for_document() RETURNS trigger as $$
+      DECLARE
+        change_reason varchar := '';
+      BEGIN
+        IF (OLD.name IS DISTINCT FROM NEW.name) THEN
+          change_reason := change_reason || 'NAME;';
+        END IF;
+
+        IF (OLD.document_type IS DISTINCT FROM NEW.document_type) THEN
+          change_reason := change_reason || 'DOCUMENT TYPE;';
+        END IF;
+
+        INSERT INTO documents_historical_reasons(document_id, change_reason)
+          VALUES (NEW.document_id, change_reason);
+
+        RETURN NEW;
+      END;
+
+      $$ LANGUAGE plpgsql;
+      CREATE TRIGGER update_history
+      BEFORE UPDATE OF document_type, name ON documents
+      FOR EACH ROW
+      WHEN (OLD.document_type IS DISTINCT FROM NEW.document_type
+            OR OLD.name IS DISTINCT FROM NEW.name)
+      EXECUTE PROCEDURE update_reason_for_document();
+					</code></pre>
 				</section>
 
 				<section>
-					<h1>THE END</h1>
-					<h3>BY Hakim El Hattab / hakim.se</h3>
+					<h2>But...</h2>
+					<img src="stored_procedures_js.jpg" class="fragment" />
+				</section>
+
+				<section>
+					<h2>Stored procedures – JavaScript</h2>
+					<pre><code data-trim>
+CREATE TABLE ratings (id int, count int, total int, average float);
+
+CREATE FUNCTION add_rating(id int, rating int)
+ RETURNS float AS
+$$
+ var data = plv8.execute("SELECT count, total, average FROM ratings
+                          WHERE id = $1", [id])[0];
+ var newTotal = data.total + rating;
+ var newCount = data.count + 1;
+ var newAverage = (newTotal / newCount);
+ plv8.execute("UPDATE ratings SET count = $1, total = $2, average = $3
+               WHERE id = $4",
+ [newCount, newTotal, newAverage, id]);
+ return newAverage;
+$$
+LANGUAGE plv8;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Stored procedures – JavaScript</h2>
+					<pre><code data-trim>
+INSERT INTO ratings VALUES (1, 0, 0, 0);
+					</code></pre>
+					<pre><code data-trim>
+SELECT add_rating(1, 5);
+ add_rating
+------------
+ 5
+ 					</code></pre>
+ 					<pre><code data-trim>
+SELECT add_rating(1, 4);
+ add_rating
+------------
+ 4.5
+ 				</code></pre>
+ 				</section>
+
+ 				<section>
+					<h1>Thanks!</h1>
+				</section>
+
+ 				<section>
+					<h1>Questions?</h1>
+				</section>
+
+				<section>
+					<h2>Useful links:</h2>
+					<ul>
+						<li><a href="https://code.google.com/p/plv8js/">https://code.google.com/p/plv8js/</a></li>
+						<li><a href="http://www.postgresql.org/docs/current/static/hstore.html">http://www.postgresql.org/docs/current/static/hstore.html</a></li>
+						<li><a href="http://www.postgresql.org/docs/current/static/functions-json.html">http://www.postgresql.org/docs/current/static/functions-json.html</a></li>
+						<li>
+						<li><a href="http://www.postgresql.org/docs/9.3/static/textsearch.html">http://www.postgresql.org/docs/9.3/static/textsearch.html</a></li>
+						<li><a href="https://github.com/JackC/surus">https://github.com/JackC/surus</a></li>
+						<li><a href="http://postgis.net/">http://postgis.net/</a></li>
+					</ul>
 				</section>
 
 			</div>
