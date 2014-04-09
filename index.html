@@ -280,25 +280,81 @@ SELECT name FROM districts WHERE
 				</section>
 
 				<section>
-					<h2>Fun fact</h2>
-					<p>
-						<pre class="fragment"><code data-trim contenteditable>
-SELECT * FROM my_table WHERE 1 = 0;
-Total runtime: 0.227 ms
-						</code></pre>
-					</p>
-					<p>
-						<pre class="fragment"><code data-trim contenteditable>
-1_000_000.times{|i| MyMongoDocument.new(title: "Document #{i}")
-						</code></pre>
-					</p>
-					<p>
-						<pre class="fragment"><code data-trim>
-Benchmark.measure{ Document.where(1 => 0) }
-=> #&lt;Benchmark::Tms:0x00000101d5a208 @label="", @real=1.603334,
-@cstime=0.0, @cutime=0.0, @stime=0.0, @utime=0.009999999999990905,
- @total=0.009999999999990905&gt;
-						</code></pre>
+					<h2>Stored procedures...</h2>
+					<pre class="fragment"><code data-trim>
+CREATE OR REPLACE FUNCTION update_reason_for_document() RETURNS trigger as $$
+      DECLARE
+        change_reason varchar := '';
+      BEGIN
+        IF (OLD.name IS DISTINCT FROM NEW.name) THEN
+          change_reason := change_reason || 'NAME;';
+        END IF;
+
+        IF (OLD.document_type IS DISTINCT FROM NEW.document_type) THEN
+          change_reason := change_reason || 'DOCUMENT TYPE;';
+        END IF;
+
+        INSERT INTO documents_historical_reasons(document_id, change_reason)
+          VALUES (NEW.document_id, change_reason);
+
+        RETURN NEW;
+      END;
+
+      $$ LANGUAGE plpgsql;
+      CREATE TRIGGER update_history
+      BEFORE UPDATE OF document_type, name ON documents
+      FOR EACH ROW
+      WHEN (OLD.document_type IS DISTINCT FROM NEW.document_type
+            OR OLD.name IS DISTINCT FROM NEW.name)
+      EXECUTE PROCEDURE update_reason_for_document();
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>But...</h2>
+					<img src="stored_procedures_js.jpg" class="fragment" />
+				</section>
+
+				<section>
+					<h2>Stored procedures – JavaScript</h2>
+					<pre><code data-trim>
+CREATE TABLE ratings (id int, count int, total int, average float);
+
+CREATE FUNCTION add_rating(id int, rating int)
+ RETURNS float AS
+$$
+ var data = plv8.execute("SELECT count, total, average FROM ratings
+                          WHERE id = $1", [id])[0];
+ var newTotal = data.total + rating;
+ var newCount = data.count + 1;
+ var newAverage = (newTotal / newCount);
+ plv8.execute("UPDATE ratings SET count = $1, total = $2, average = $3
+               WHERE id = $4",
+ [newCount, newTotal, newAverage, id]);
+ return newAverage;
+$$
+LANGUAGE plv8;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Stored procedures – JavaScript</h2>
+					<pre><code data-trim>
+INSERT INTO ratings VALUES (1, 0, 0, 0);
+					</code></pre>
+					<pre><code data-trim>
+SELECT add_rating(1, 5);
+ add_rating
+------------
+ 5
+ 					</code></pre>
+ 					<pre><code data-trim>
+SELECT add_rating(1, 4);
+ add_rating
+------------
+ 4.5
+ 				</code></pre>
+ 				</section>
 				</section>
 
 				<section>
