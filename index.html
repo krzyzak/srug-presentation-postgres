@@ -85,18 +85,18 @@
 
 				<section>
 					<h2>HStore</h2>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 CREATE EXTENSION "hstore";
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 ALTER TABLE users ADD COLUMN settings hstore;
 					</code></pre>
 
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
  INSERT INTO "users" values(1, 'admin=>"true",foo=>"bar"');
 					</code></pre>
 
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
  SELECT * FROM "users" WHERE settings->'admin' = 'true';
 					</code></pre>
 				</section>
@@ -116,10 +116,10 @@ ALTER TABLE users ADD COLUMN settings hstore;
 				<section>
 					<h2>JSON</h2>
 					We can nest things!
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 ALTER TABLE users ADD COLUMN json_settings json;
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
    "foo": 9,
@@ -128,7 +128,7 @@ UPDATE "users" SET json_settings =
   }
  ';
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 SELECT * FROM "users" WHERE
  json_extract_path(json_settings, 'we', 'can', 'nest') = 'things';
 					</code></pre>
@@ -136,7 +136,7 @@ SELECT * FROM "users" WHERE
 
 				<section>
 					<h2>JSON objects</h2>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
    "foo": 9,
@@ -145,7 +145,7 @@ UPDATE "users" SET json_settings =
   }
  ';
 					</code></pre>
-					<pre><code data-trim>
+					<pre class="fragment"><code data-trim>
 SELECT * FROM "users" WHERE
  '"moderator"' IN(
   SELECT value::text FROM json_array_elements(json_settings->'roles')
