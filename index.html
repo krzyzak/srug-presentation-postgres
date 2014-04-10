@@ -239,25 +239,7 @@ Post.all_json(
         </section>
 
         <section>
-          <table>
-            <thead>
-              <td>Posts count</td>
-              <td>AM::Serializers</td>
-              <td>Surus</td>
-            </thead>
-            <tbody>
-            <tr>
-              <td>100</td>
-              <td>9.46</td>
-              <td>2.88</td>
-            </tr>
-            <tr>
-              <td>400</td>
-              <td>36.80</td>
-              <td>6.39</td>
-            </tr>
-            <tr>
-          </table>
+          <img src="serialization_bench.png">
         </section>
 
         <section>
@@ -477,6 +459,10 @@ end.results
         </section>
 
         <section>
+        	<img src="large_dataset.png">
+        </section>
+
+        <section>
 <pre><code data-trim>
 Post.create do |post|
   post.title   = Faker::Lorem.sentence
@@ -496,86 +482,7 @@ end.results
         </section>
 
         <section>
-        Large:
-          <table class="table_1">
-<thead>
-<td>Posts count</td>
-    <td>Postgres time</td>
-    <td>Solr time</td>
-    <td>Postgres indexing</td>
-    <td>Solr Indexing</td>
-  </thead>
-<tbody>
-<tr>
-<td>100</td>
-      <td>7.64</td>
-      <td>5.26</td>
-      <td>1.84</td>
-      <td>10.42</td>
-    </tr>
-<tr>
-<td>1000</td>
-      <td>18.50</td>
-      <td>5.99</td>
-      <td>0.39</td>
-      <td>0.95</td>
-    </tr>
-<tr>
-<td>10000</td>
-      <td>8.98</td>
-      <td>10.14</td>
-      <td>0.11</td>
-      <td>0.64</td>
-    </tr>
-<tr>
-<td>100000</td>
-      <td>33.97</td>
-      <td>14.72</td>
-      <td>0.087</td>
-      <td>0.35</td>
-    </tr>
-</tbody>
-</table>
-Small:
-<table class="table_1">
-  <thead>
-    <td>Posts count</td>
-    <td>Postgres time</td>
-    <td>Solr time</td>
-    <td>Postgres indexing</td>
-    <td>Solr Indexing</td>
-  </thead>
-  <tbody>
-    <tr>
-      <td>100</td>
-      <td>6.32</td>
-      <td>5.01</td>
-      <td>0.27</td>
-      <td>2.83</td>
-    </tr>
-    <tr>
-      <td>1000</td>
-      <td>11.17</td>
-      <td>5.98</td>
-      <td>0.064</td>
-      <td>0.48</td>
-    </tr>
-    <tr>
-      <td>10000</td>
-      <td>8.25</td>
-      <td>7.26</td>
-      <td>0.028</td>
-      <td>0.32</td>
-    </tr>
-    <tr>
-      <td>100000</td>
-      <td>36.86</td>
-      <td>9.20</td>
-      <td>0.027</td>
-      <td>0.32</td>
-    </tr>
-  </tbody>
-</table>
+        	<img src="small_dataset.png">
         </section>
 
         <section>
@@ -603,48 +510,10 @@ end.results
         </section>
 
         <section>
-<table>
-<thead>
-<td>Posts count</td>
-    <td>Postgres time</td>
-    <td>Solr time</td>
-    <td>Postgres indexing</td>
-    <td>Solr Indexing</td>
-  </thead>
-<tbody>
-<tr>
-<td>100</td>
-      <td>3.09</td>
-      <td>4.23</td>
-      <td>0.20</td>
-      <td>2.66</td>
-    </tr>
-<tr>
-<td>1000</td>
-      <td>2.60</td>
-      <td>4.83</td>
-      <td>0.08</td>
-      <td>0.60</td>
-    </tr>
-<tr>
-<td>10000</td>
-      <td>1.83</td>
-      <td>6.33</td>
-      <td>0.02</td>
-      <td>0.34</td>
-    </tr>
-<tr>
-<td>100000</td>
-      <td>4.33</td>
-      <td>9.08</td>
-      <td>0.0066</td>
-      <td>0.31</td>
-    </tr>
-</tbody>
-</table>
-<div class="fragment">
-  <img src="oh_yes.GIF">
-</div>
+          <img src="sparse_dataset.png">
+					<div class="fragment">
+					  <img src="oh_yes.GIF", style="position: fixed; top: 0; left: 0">
+					</div>
         </section>
 
         <section>
