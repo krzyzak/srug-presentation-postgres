@@ -91,6 +91,14 @@ ALTER TABLE users ADD COLUMN settings hstore;
 					<pre class="fragment"><code data-trim>
  SELECT * FROM "users" WHERE settings->'admin' = 'true';
 					</code></pre>
+
+          <pre class="fragment"><code data-trim>
+ add_column :users, :settings, :hstore
+          </code></pre>
+
+          <pre class="fragment"><code data-trim>
+User.where("settings -> 'admin' = 'true'")
+          </code></pre>
 				</section>
 
 				<section>
