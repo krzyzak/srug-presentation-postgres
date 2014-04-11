@@ -153,6 +153,40 @@ SELECT * FROM "users" WHERE
 					</code></pre>
 				</section>
 
+        <section>
+          <h2>JSON – indexing</h2>
+          <pre class="fragment"><code data-trim>
+SELECT COUNT(*) FROM lodgings;
+count
+--------
+ 868922
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+EXPLAIN ANALYZE SELECT raw_data::json->'name' FROM lodgings
+ WHERE raw_data::json->>'name' = 'Pousada do Pico';
+                                                       QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------
+ Seq Scan on lodgings  (cost=0.00..49279.68 rows=1037 width=467) (actual time=0.509..19126.720 rows=1 loops=1)
+   Filter: (((raw_data)::json ->> 'name'::text) = 'Pousada do Pico'::text)
+   Rows Removed by Filter: 209338
+ Total runtime: 19126.747 ms
+(4 rows)
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+CREATE INDEX ON lodgings USING btree ( (raw_data::json->>'name') );
+          </code></pre>
+
+          <pre class="fragment"><code data-trim>
+EXPLAIN ANALYZE SELECT raw_data::json->'name' FROM lodgings
+ WHERE raw_data::json->>'name' = 'Pousada do Pico';
+                                                                   QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using lodgings_expr_idx on lodgings  (cost=0.43..8.45 rows=1 width=458) (actual time=0.295..0.297 rows=1 loops=1)
+   Index Cond: (((raw_data)::json ->> 'name'::text) = 'Pousada do Pico'::text)
+ Total runtime: 0.327 ms
+          </code></pre>
+        </section>
+
 				<!-- KILLA PART START -->
         <section>
           <h1>#to_json</h1>
@@ -660,6 +694,34 @@ SELECT name FROM districts WHERE
  				</div>
 				</section>
 
+        <section>
+          <h2>Postgis – indexing</h2>
+          <pre class="fragment"><code data-trim>
+SELECT COUNT(*) FROM places;
+  count
+---------
+ 8738610
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+EXPLAIN ANALYZE SELECT pl.full_name
+ FROM places pl
+ WHERE
+  ST_DWithin(
+   pl.location,
+   ST_GeomFromEWKT('SRID=4326;POINT(3.382491 50.609511)'), 1.0899
+  );
+                                                                                                                    QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on places pl  (cost=577.43..47434.52 rows=789 width=25) (actual time=6.446..37.533 rows=16613 loops=1)
+   Recheck Cond: (location && '0103000020E61000000100000005000000DCD440F33957024028D2FD9C82C24840DCD440F33957024038BBB54C86D94940EEB25F77BAE3114038BBB54C86D94940EEB25F77BAE3114028D2FD9C82C24840DCD440F33957024028D2FD9C82C24840'::geometry)
+   Filter: (('0101000020E61000005C1D0071570F0B40B0C6D974044E4940'::geometry && st_expand(location, 1.0899::double precision)) AND _st_dwithin(location, '0101000020E61000005C1D0071570F0B40B0C6D974044E4940'::geometry, 1.0899::double precision))
+   Rows Removed by Filter: 2582
+   ->  Bitmap Index Scan on places_location_idx  (cost=0.00..577.23 rows=11842 width=0) (actual time=5.869..5.869 rows=19195 loops=1)
+         Index Cond: (location && '0103000020E61000000100000005000000DCD440F33957024028D2FD9C82C24840DCD440F33957024038BBB54C86D94940EEB25F77BAE3114038BBB54C86D94940EEB25F77BAE3114028D2FD9C82C24840DCD440F33957024028D2FD9C82C24840'::geometry)
+ Total runtime: 38.362 ms
+          </code></pre>
+
+        </section>
 				<section>
 					<h2>But there’s more!</h2>
 					<ul>
