@@ -85,7 +85,7 @@ ALTER TABLE users ADD COLUMN settings hstore;
 					</code></pre>
 
 					<pre class="fragment"><code data-trim>
- INSERT INTO "users" values(1, 'admin=>"true",foo=>"bar"');
+ INSERT INTO "users" values(1, 'admin=>"true",likes_count=>"9"');
 					</code></pre>
 
 					<pre class="fragment"><code data-trim>
@@ -122,7 +122,7 @@ ALTER TABLE users ADD COLUMN json_settings json;
 					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
-   "foo": 9,
+   "likes_count": 9,
    "roles": ["moderator", "super-moderator"],
    "we": {"can": {"nest": "things"} }
   }
@@ -139,7 +139,7 @@ SELECT * FROM "users" WHERE
 					<pre class="fragment"><code data-trim>
 UPDATE "users" SET json_settings =
  '{
-   "foo": 9,
+   "likes_count": 9,
    "roles": ["moderator", "super-moderator"],
    "we": {"can": {"nest": "things"} }
   }
